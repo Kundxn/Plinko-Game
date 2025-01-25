@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stake Plinko Game</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #0a0a0a;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .plinko-container {
+            text-align: center;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .plinko-board {
+            position: relative;
+            width: 600px;
+            height: 500px;
+            background-color: #2c2c2c;
+            border-radius: 15px;
+            border: 3px solid #444;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+
+        .peg {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background-color: #ffffff;
+            border-radius: 50%;
+        }
+
+        .ball {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #ff7b00;
+            border-radius: 50%;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .bins {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding: 0 10px;
+        }
+
+        .bin {
+            background-color: #f39c12;
+            padding: 10px;
+            width: 60px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            color: black;
+        }
+
+        .controls {
+            margin: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .controls input, .controls button {
+            margin: 0 10px;
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+        }
+
+        .controls input {
+            background-color: #34495e;
+            color: white;
+            width: 100px;
+        }
+
+        .controls button {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .controls button:hover {
+            background-color: #2ecc71;
+        }
+
+        .controls input:hover {
+            background-color: #7f8c8d;
+        }
+
+        .header {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="plinko-container">
+    <h1 class="header">Stake Plinko Game</h1>
+    <div class="plinko-board" id="plinko-board"></div>
+    <div class="controls">
+        <input type="number" id="betAmount" placeholder="Bet Amount" min="1" max="1000">
+        <button onclick="startGame()">Start Game</button>
+    </div>
+    <div class="bins" id="bins">
+        <div class="bin">1.5x</div>
+        <div class="bin">2x</div>
+        <div class="bin">4x</div>
+        <div class="bin">10x</div>
+        <div class="bin">20x</div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const board = document.getElementById('plinko-board');
+        const bins = document.getElementById('bins');
+        const numRows = 9;  // Number of rows of pegs
+        const numCols = 9;  // Number of columns of pegs
+        const pegSpacing = 60;  // Horizontal distance between pegs
+
+        // Create pegs in a triangular grid
+        for (let row = 0; row < numRows; row++) {
+            for (let col = 0; col <= row; col++) {
+                const peg = document.createElement('div');
+                peg.classList.add('peg');
+                peg.style.top = `${row * 50}px`;
+                peg.style.left = `${(col - row / 2) * pegSpacing + 270}px`;  // Adjust for center
+                board.appendChild(peg);
+            }
+        }
+
+        window.startGame = () => {
+            const ball = document.createElement('div');
+            ball.classList.add('ball');
+            ball.style.top = '0px';
+            ball.style.left = `${Math.random() * 500 + 50}px`; // Random drop position from the top
+            board.appendChild(ball);
+
+            let positionX = ball.offsetLeft;
+            let positionY = ball.offsetTop;
+            let direction = 0;  // No direction initially (we'll handle it below)
+
+            // Simulate the ball dropping and interacting with pegs
+            const fallInterval = setInterval(() => {
+                positionY += 5;  // Ball speed
+                positionX += direction * 5;  // Directional horizontal movement
+
+                if (positionY >= 450) { // When ball reaches the bottom
+                    clearInterval(fallInterval);
+                    ball.style.top = '450px';  // Ball reaches the bottom
+                    checkBin(positionX);  // Check which bin the ball lands in
+                } else {
+                    ball.style.top = `${positionY}px`;
+                    ball.style.left = `${positionX}px`;
+                }
+
+                // Check for collisions with pegs
+                document.querySelectorAll('.peg').forEach(peg => {
+                    const pegRect = peg.getBoundingClientRect();
+                    const ballRect = ball.getBoundingClientRect();
+
+                    // Detect if the ball is about to collide with the peg
+                    if (ballRect.bottom <= pegRect.top + 10 && ballRect.right > pegRect.left && ballRect.left < pegRect.right) {
+                        direction = Math.random() > 0.5 ? 1 : -1;  // Change direction when ball hits a peg
+                    }
+                });
+            }, 20);  // Ball falling speed
+        };
+
+        function checkBin(ballPosX) {
+            const binsArr = bins.querySelectorAll('.bin');
+            const binWidth = binsArr[0].offsetWidth;
+
+            binsArr.forEach((bin, index) => {
+                const binLeft = bin.offsetLeft;
+                const binRight = binLeft + binWidth;
+
+                if (ballPosX >= binLeft && ballPosX <= binRight) {
+                    bin.innerHTML = `Landed in ${bin.innerHTML}`;
+                }
+            });
+        }
+    });
+</script>
+</body>
+</html>
